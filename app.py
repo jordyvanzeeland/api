@@ -5,6 +5,7 @@ from flask_mysqldb import MySQL
 import jwt
 import datetime
 from functools import wraps
+import hashlib, binascii, os
 
 app = Flask(__name__)
 api = Api(app)
@@ -38,6 +39,26 @@ def token_required(f):
 
     return decorated
 
+
+# Hash a password for storing.
+def hash_password(password):
+    salt = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
+    pwdhash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'), 
+                                salt, 100000)
+    pwdhash = binascii.hexlify(pwdhash)
+    return (salt + pwdhash).decode('ascii')
+
+# Verify a stored password against one provided by user
+def verify_password(stored_password, provided_password):
+    salt = stored_password[:64]
+    stored_password = stored_password[64:]
+    pwdhash = hashlib.pbkdf2_hmac('sha512', 
+                                  provided_password.encode('utf-8'), 
+                                  salt.encode('ascii'), 
+                                  100000)
+    pwdhash = binascii.hexlify(pwdhash).decode('ascii')
+    return pwdhash == stored_password
+
 # Authentication
 @app.route('/login', methods=['POST'])
 def login():
@@ -45,12 +66,30 @@ def login():
     username = args['username']
     password = args['password']
 
-    if username == 'jordy' and password == 'password':
-        token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=2)}, app.config['SECRET_KEY'])
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * from api_users WHERE username = %s", [username])
+    result = cursor.fetchone()
 
+    password = verify_password(str(result[3]), str(password))
+
+    if result[2] == username and password == True:
+        token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=2)}, app.config['SECRET_KEY'])
         return jsonify({'token' : token})
 
     return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+
+@app.route('/register', methods=['POST'])
+def addUser():
+    args = request.args
+    name = args['name']
+    username = args['username']
+    password = args['password']
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("INSERT INTO api_users (name, username, password) VALUES (%s, %s, %s)", (name, username, hash_password(password)))
+    mysql.connection.commit()
+    cursor.close()
+    return 'OK'
 
 # Get list of all measurements
 @app.route('/healthdash/measurements', methods=['GET'])
