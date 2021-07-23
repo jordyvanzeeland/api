@@ -20,6 +20,7 @@ app.config['SECRET_KEY'] = data["SECRET_KEY"]
 
 mysql = MySQL(app)
 
+# Require token for api calls
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -29,7 +30,7 @@ def token_required(f):
             return jsonify({'message' : 'Token is missing!'}), 403
 
         try: 
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            tokendata = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
         except:
             return jsonify({'message' : 'Token is invalid!'}), 403
 
@@ -37,6 +38,7 @@ def token_required(f):
 
     return decorated
 
+# Authentication
 @app.route('/login', methods=['POST'])
 def login():
     args = request.args
@@ -44,17 +46,18 @@ def login():
     password = args['password']
 
     if username == 'jordy' and password == 'password':
-        token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(seconds=15)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=2)}, app.config['SECRET_KEY'])
 
         return jsonify({'token' : token})
 
     return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
+# Get list of all measurements
 @app.route('/healthdash/measurements', methods=['GET'])
 @token_required
 def HealthDash_Measurements():
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM healthdash_measurements")
+    cursor.execute("SELECT * FROM healthdash_measurements ORDER BY healthdash_measurements.date ASC")
     row_headers = [x[0] for x in cursor.description]
     result = cursor.fetchall()
     json_data=[]
@@ -63,9 +66,10 @@ def HealthDash_Measurements():
         
     return jsonify(json_data)
 
+# Get list of all activities
 @app.route('/healthdash/activities', methods=['GET'])
 @token_required
-def HealthDash_Activities(self):
+def HealthDash_Activities():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM healthdash_activities")
     row_headers = [x[0] for x in cursor.description]
@@ -75,6 +79,17 @@ def HealthDash_Activities(self):
         json_data.append(dict(zip(row_headers,measurement)))
     return jsonify(json_data)
 
+
+# Get BMI of latest weight added
+@app.route('/healthdash/bmi', methods=['GET'])
+@token_required
+def HealthDash_BMI():
+    current_length = 173
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT value FROM healthdash_measurements WHERE type='weight' ORDER BY healthdash_measurements.date DESC LIMIT 1")
+    result = cursor.fetchone()
+    bmi = float(result[0]) / (current_length/100)**2
+    return jsonify({"bmi" : str(round(bmi, 1))})
 
 if __name__ == '__main__':
      app.run(port='5000')
