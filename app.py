@@ -92,22 +92,51 @@ def addUser():
     return 'OK'
 
 # Get list of all measurements
-@app.route('/healthdash/measurements', methods=['GET'])
-@token_required
+@app.route('/healthdash/weights', methods=['GET'])
+# @token_required
 def HealthDash_Measurements():
+    current_length = 173
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM healthdash_measurements ORDER BY healthdash_measurements.date ASC")
-    row_headers = [x[0] for x in cursor.description]
+    cursor.execute("SELECT * FROM healthdash_measurements where type='weight' ORDER BY healthdash_measurements.date ASC")
     result = cursor.fetchall()
-    json_data=[]
-    for measurement in result:
-        json_data.append(dict(zip(row_headers,measurement)))
-        
-    return jsonify(json_data)
+    weights = []
+    
+    #json_data=[]
+    for data in result:
+        bmi = float(data[3]) / (current_length/100)**2
+        weights.append({
+            'weight': data[3],
+            'weight_bmi': str(round(bmi, 1)),
+            'weight_date': data[1]
+        })
+
+    return jsonify(weights)
+
+# Get weight stats
+@app.route('/healthdash/weights/stats', methods=['GET'])
+def HealthDash_Stats():
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM healthdash_measurements where type='weight' ORDER BY healthdash_measurements.date ASC")
+    result = cursor.fetchall()
+    stats = []
+
+    first_item = result[0]
+    last_item = (result[len(result) - 1])
+    current_length = 173
+    bmi = float(last_item[3]) / (current_length/100)**2
+
+    stats.append({
+        'start_weight': first_item[3],
+        'current_weight': last_item[3],
+        'weight_loss': (float(first_item[3]) - float(first_item[3])),
+        'current_bmi': str(round(bmi, 1))
+    })
+
+    return jsonify(stats)
 
 # Get list of all activities
 @app.route('/healthdash/activities', methods=['GET'])
-@token_required
+# @token_required
 def HealthDash_Activities():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM healthdash_activities")
