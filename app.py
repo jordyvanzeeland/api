@@ -107,7 +107,7 @@ def HealthDash_Measurements():
         weights.append({
             'weight': data[3],
             'weight_bmi': str(round(bmi, 1)),
-            'weight_date': data[1]
+            'weight_date': data[1].strftime("%d-%m-%Y")
         })
 
     return jsonify(weights)
@@ -128,7 +128,7 @@ def HealthDash_Stats():
     stats.append({
         'start_weight': first_item[3],
         'current_weight': last_item[3],
-        'weight_loss': (float(first_item[3]) - float(first_item[3])),
+        'weight_loss': str(round((float(first_item[3]) - float(last_item[3])), 1)),
         'current_bmi': str(round(bmi, 1))
     })
 
