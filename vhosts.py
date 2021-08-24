@@ -55,19 +55,22 @@ def InsertVHost():
     return jsonify("OK")
 
 @vhosts.route('/<int:id>/enable')
-def EnableVHost():
+def EnableVHost(id):
     hostid = request.headers.get('hostid')
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
     cursor.execute("UPDATE vhosts SET active = 1 WHERE id = " + str(hostid))
+    mysql.connection.commit()
+    print("UPDATE vhosts SET active = 1 WHERE id = " + str(hostid))
     return jsonify("OK")
 
 @vhosts.route('/<int:id>/disable')
-def DisableVHost():
+def DisableVHost(id):
     hostid = request.headers.get('hostid')
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
     cursor.execute("UPDATE vhosts SET active = 0 WHERE id = " + str(hostid))
+    mysql.connection.commit()
     return jsonify("OK")
 
 @vhosts.route('/<int:id>/update')
