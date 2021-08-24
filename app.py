@@ -6,9 +6,11 @@ import jwt
 from functools import wraps
 from healthdash import healthdash
 from auth import auth
+from vhosts import vhosts
 
 app = Flask(__name__)
 app.register_blueprint(healthdash, url_prefix='/healthdash')
+app.register_blueprint(vhosts, url_prefix='/vhosts')
 app.register_blueprint(auth, url_prefix='/auth')
 api = Api(app)
 
