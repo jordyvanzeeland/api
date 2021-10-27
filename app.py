@@ -5,13 +5,11 @@ from flask_mysqldb import MySQL
 from healthdash import healthdash
 from auth import auth
 from resume import resume
-from projects import projects
 
 app = Flask(__name__)
 app.register_blueprint(healthdash, url_prefix='/healthdash')
 app.register_blueprint(resume, url_prefix='/resume', name="me")
 app.register_blueprint(auth, url_prefix='/auth')
-app.register_blueprint(projects, url_prefix='/projects')
 api = Api(app)
 
 configfile = open('config.json')

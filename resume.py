@@ -1,11 +1,13 @@
 from flask_jsonpify import jsonify
 from flask_mysqldb import MySQL
+from functions import token_required
 from datetime import datetime
 from flask import Flask, Blueprint, current_app, request
 
 resume = Blueprint('resume', __name__)
 
 @resume.route('/personal')
+@token_required
 def getPersonalData():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
@@ -22,6 +24,7 @@ def getPersonalData():
     return jsonify(personal)
 
 @resume.route('/jobs')
+@token_required
 def getJobsData():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
@@ -48,6 +51,7 @@ def getJobsData():
     return jsonify(jobs)
 
 @resume.route('/education')
+@token_required
 def getEducationData():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
@@ -68,6 +72,7 @@ def getEducationData():
     return jsonify(education)
 
 @resume.route('/skills')
+@token_required
 def getSkillsData():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()

@@ -1,10 +1,12 @@
 from flask_jsonpify import jsonify
 from flask_mysqldb import MySQL
+from functions import token_required
 from flask import Flask, Blueprint, current_app
 
 healthdash = Blueprint('healthdash', __name__)
 
 @healthdash.route('/weights')
+@token_required
 def HealthDash_Measurements():
     mysql = current_app.config['MYSQL']
     current_length = 173
@@ -25,6 +27,7 @@ def HealthDash_Measurements():
     return jsonify(weights)
 
 @healthdash.route('/weights/stats')
+@token_required
 def HealthDash_Stats():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
@@ -47,6 +50,7 @@ def HealthDash_Stats():
     return jsonify(stats)
 
 @healthdash.route('/activities')
+@token_required
 def HealthDash_Activities():
     mysql = current_app.config['MYSQL']
     cursor = mysql.connection.cursor()
@@ -60,6 +64,7 @@ def HealthDash_Activities():
     return jsonify(json_data)
 
 @healthdash.route('/bmi')
+@token_required
 def HealthDash_BMI():
     current_length = 173
     mysql = current_app.config['MYSQL']
