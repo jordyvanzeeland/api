@@ -1,0 +1,17 @@
+on: push
+name: Publish Website
+jobs:
+  FTP-Deploy-Action:
+    name: FTP-Deploy-Action
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: FTP-Deploy-Action
+      uses: SamKirkland/FTP-Deploy-Action@2.0.0
+      env:
+        FTP_SERVER: ${{ secrets.API_HOST }}
+        FTP_USERNAME: ${{ secrets.API_USER }}
+        FTP_PASSWORD: ${{ secrets.API_PASSWORD }}
+        REMOTE_DIR: ${{ secrets.API_DIR }}
+        METHOD: sftp
+        PORT: 22
