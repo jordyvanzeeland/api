@@ -4,11 +4,11 @@ from flask_jsonpify import jsonify
 from flask_mysqldb import MySQL
 from healthdash import healthdash
 from auth import auth
-from resume import resume
+from skills import skills
 
 app = Flask(__name__)
 app.register_blueprint(healthdash, url_prefix='/healthdash')
-app.register_blueprint(resume, url_prefix='/resume', name="me")
+app.register_blueprint(skills, url_prefix='/skills')
 app.register_blueprint(auth, url_prefix='/auth')
 api = Api(app)
 
